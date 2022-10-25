@@ -3,12 +3,11 @@
 from collections import defaultdict
 shellcnt = defaultdict(int)
 
-pw = open('passwd')
-
-for line in pw:
-  pwent = line.split(":")
-  shell = pwent[6].rstrip()
-  shellcnt[shell] +=1;
+with open ('passwd', "r") as pw:
+  for line = pw.readline():
+    pwent = line.split(":")
+    shell = pwent[6].rstrip()
+    shellcnt[shell] +=1;
 
 shells = sorted(shellcnt.keys())
 
