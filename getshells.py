@@ -4,9 +4,8 @@ from collections import defaultdict
 shellcnt = defaultdict(int)
 
 with open ('passwd', "r") as pw:
-  for line = pw.readline():
-    pwent = line.split(":")
-    shell = pwent[6].rstrip()
+  for line in pw.readlines():
+    shell = line[line.rfind(':')+1:].strip()
     shellcnt[shell] +=1;
 
 shells = sorted(shellcnt.keys())
