@@ -1,12 +1,13 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
+use strict;
+
+my %pwhash = ();
 
 open(PW, "passwd") || die "trying";
-
-while (chomp($line = <PW>)) {
-  ($foo,$bar,$baz,$quux,$goo,$googoo,$shell) = split /:/, $line;
-#  printf("%s\n", $shell);
-  $pwhash{$shell}++;
-  
+while (chomp(my $line = <PW>)) {
+    $line =~ /.*:(\S+)$/;
+    $pwhash{$1}++;
 }
 
 foreach (sort keys (%pwhash)) {
