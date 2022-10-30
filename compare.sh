@@ -14,7 +14,7 @@ if [ -n "${CC}" ];then
   CPROG=getshells
   ${CC} -O2 -o ${CPROG} getshells.c
 else
-  echo "C Compiler not found"
+  echo "C Compiler not found."
 fi
 
 # Check for golang compiler
@@ -23,20 +23,20 @@ if [ -n "(which go)" ];then
   go build main.go
   mv main ${GOPROG}
 else
-  echo "Golang compiler not found"
+  echo "Golang compiler not found."
 fi
 
 # Check for Powershell
 if [ -n "$(which pwsh)" ];then
   PSHELL=getshells.ps1
 else
-  echo "Powershell not found"
+  echo "Powershell not found."
 fi
 
 if [ -n "$(which python3)" ];then
   PYPROG=getshells.py
 else
-  echo "Python3 not found"
+  echo "Python3 not found."
 fi
 
 if [ -n "$(which perl)" ];then
@@ -48,10 +48,16 @@ fi
 if [ -n "$(which sbcl)" ];then
   LISPPROG=getshells.lisp
 else
-  echo "SBCL (Lisp) not found"
+  echo "SBCL (Lisp) not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PSHELL} ${PYPROG} ${PLPROG} ${LISPPROG} getshells.awk
+if [ -n "$(which node)" ];then
+  NODEPROG=getshells.js
+else
+  echo "NodeJS not found."
+fi
+
+for i in ${CPROG} ${GOPROG} ${PSHELL} ${PYPROG} ${PLPROG} ${LISPPROG} ${NODEPROG} getshells.awk
 do
   echo "################################################"
   echo $i
