@@ -57,10 +57,16 @@ else
   echo "NodeJS not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PSHELL} ${PYPROG} ${PLPROG} ${LISPPROG} ${NODEPROG} getshells.awk
+if [ -n "$(which julia)" ];then
+  JLPROG=getshells.jl
+else
+  echo "Julia not found."
+fi
+
+for i in ${CPROG} ${GOPROG} ${PSHELL} ${PYPROG} ${PLPROG} ${LISPPROG} ${NODEPROG} ${JLPROG} getshells.awk
 do
   echo "################################################"
   echo $i
-  time ./${i}
+  /usr/bin/time -f "\t%E real" ./${i}
 done
 
