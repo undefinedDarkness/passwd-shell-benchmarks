@@ -1,4 +1,4 @@
-#!/home/jjs/bin/julia
+#!/usr/bin/env julia
 
 shellcnt = Dict{String,Int64}()
 
