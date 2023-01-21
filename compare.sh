@@ -63,7 +63,7 @@ else
   echo "Julia not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PSHELL} ${PYPROG} ${PLPROG} ${LISPPROG} ${NODEPROG} ${JLPROG} getshells.awk
+for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${LISPPROG} getshells.awk ${PSHELL} 
 do
   echo "################################################"
   echo $i

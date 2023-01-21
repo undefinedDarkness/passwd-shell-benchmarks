@@ -15,7 +15,6 @@ catch
     println("file not found")
 end
 
-println("\nSummary\n--------------------")
 for i in keys(shellcnt)
   println(i, ":\t", shellcnt[i])
 end
