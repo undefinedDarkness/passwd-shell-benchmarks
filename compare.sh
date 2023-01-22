@@ -76,7 +76,7 @@ else
   echo "Ruby not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} i${RBPROG} ${LISPPROG} get${AWK} ${PSHELL} 
+for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${RBPROG} ${LISPPROG} ${AWK} ${PSHELL} 
 do
   echo "################################################"
   echo $i

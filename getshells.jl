@@ -3,14 +3,14 @@
 shellcnt = Dict{String,Int64}()
 
 try
-  f = open("passwd", "r")
+  open("passwd", "r") do f
   while ! eof(f)
     s = readline(f)
     pwline = split(s, ":")
     shell = pwline[7]
     shellcnt["$shell"] = get!(shellcnt, "$shell", 0) +1
   end
-  close(f)
+end
 catch
     println("file not found")
 end
