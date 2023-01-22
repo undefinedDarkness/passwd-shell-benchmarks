@@ -33,6 +33,13 @@ else
   echo "Powershell not found."
 fi
 
+# Check for awk
+if [ -n "$(which awk)" ];then
+  AWK=getshells.awk
+else
+  echo "Awk not found."
+fi
+
 if [ -n "$(which python3)" ];then
   PYPROG=getshells.py
 else
@@ -63,7 +70,13 @@ else
   echo "Julia not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${LISPPROG} getshells.awk ${PSHELL} 
+if [ -n "$(which ruby)" ];then
+  RBPROG=getshells.rb
+else
+  echo "Ruby not found."
+fi
+
+for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} i${RBPROG} ${LISPPROG} get${AWK} ${PSHELL} 
 do
   echo "################################################"
   echo $i
