@@ -1,6 +1,6 @@
 # passwd-shell-benchmarks
 
-A collection of programs indifferent languages, which perform the following task:
+A collection of programs in different languages, which perform the following task:
 
  Open a colon delimited unix password file (provided here) in the current directory
  Read the file and count the instances of each login shell (the last field)
