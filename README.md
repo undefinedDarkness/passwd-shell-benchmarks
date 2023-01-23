@@ -2,9 +2,9 @@
 
 A collection of programs in different languages, which perform the following task:
 
- Open a colon delimited unix password file (provided here) in the current directory
- Read the file and count the instances of each login shell (the last field)
- For each login shell, print the number of accounts using each shell
+ * Open a colon delimited unix password file (provided here) in the current directory
+ * Read the file and count the instances of each login shell (the last field)
+ * For each login shell, print the number of accounts using each shell
 
 A script is included, which runs each of the programs and times the results for each
 
