@@ -1,8 +1,26 @@
 # passwd-shell-benchmarks
 
-A motley collection of quick hacks to count the occurrences of each login shell in a passwd file
+A collection of programs indifferent languages, which perform the following task:
 
-As written, they expect a unix style password file in the current directory, called "passwd"
+ Open a colon delimited unix password file (provided here) in the current directory
+ Read the file and count the instances of each login shell (the last field)
+ For each login shell, print the number of accounts using each shell
 
-So far there are benchmarks written in c, go, shell/awk, python, perl, bash. node, lisp, julia, ruby and ms powershell
+A script is included, which runs each of the programs and times the results for each
+
+To date, the following languages are represented:
+
+ *  c
+ *  go
+ *  julia
+ *  lisp
+ *  ms powershell
+ *  node.js
+ *  perl
+ *  python
+ *  ruby
+ *  shell/awk
+
+If you're an expert in a language not listed here, we welcome your contribution!
+
 
