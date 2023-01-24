@@ -76,10 +76,17 @@ else
   echo "Ruby not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${RBPROG} ${LISPPROG} ${AWK} ${PSHELL} 
+if [ -n "$(which crystal)" ];then
+  CRPROG=getshells-cr
+  crystal build getshells.cr
+  mv getshells ${CRPROG}
+else
+  echo "Crystal-lang not found."
+fi
+
+for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${RBPROG} ${LISPPROG} ${AWK} ${PSHELL} ${CRPROG}
 do
   echo "################################################"
   echo $i
   /usr/bin/time -f "\t%E real" ./${i}
 done
-
