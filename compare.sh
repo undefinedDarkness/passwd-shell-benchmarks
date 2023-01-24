@@ -84,7 +84,7 @@ else
   echo "Crystal-lang not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${RBPROG} ${LISPPROG} ${AWK} ${PSHELL} ${CRPROG}
+for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${RBPROG} ${LISPPROG} ${AWK} ${CRPROG} ${PSHELL} 
 do
   echo "################################################"
   echo $i
