@@ -10,11 +10,20 @@ elif [ -n "$(which gcc)" ];then
 elif [ -n "$(which cc)" ];then
   CC=cc
 fi
+
 if [ -n "${CC}" ];then
-  CPROG=getshells
-  ${CC} -O2 -o ${CPROG} getshells.c
+  CPROG=a.out
+  ${CC} -O3 getshells.c
 else
   echo "C Compiler not found."
+fi
+
+# Check for rust compiler
+if [ -n "$(which rustc)" ];then
+  RSPROG=getshells-rs
+  rustc -C opt-level=3 -o getshells-rs getshells.rs 
+else
+  echo "rust not found"
 fi
 
 # Check for golang compiler
@@ -84,7 +93,7 @@ else
   echo "Crystal-lang not found."
 fi
 
-for i in ${CPROG} ${GOPROG} ${PYPROG} ${PLPROG} ${NODEPROG} ${JLPROG} ${RBPROG} ${LISPPROG} ${AWK} ${CRPROG} ${PSHELL} 
+for i in ${CPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${AWK} ${CRPROG} ${PSHELL} 
 do
   echo "################################################"
   echo $i
