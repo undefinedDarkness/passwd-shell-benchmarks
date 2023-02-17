@@ -1,6 +1,3 @@
 a.out
 compare.txt
-getshells
-getshells-rs
-getshells-go
-getshells-cr
+getshells-*
