@@ -88,7 +88,7 @@ fi
 
 if [ -n "$(which crystal)" ];then
   CRPROG=getshells-cr
-  crystal build getshells.cr
+  crystal build --release getshells.cr
   mv getshells ${CRPROG}
 else
   echo "Crystal-lang not found."
