@@ -89,7 +89,7 @@ fi
 if [ -n "$(which crystal)" ];then
   CRPROG=getshells-cr
   crystal build --release getshells.cr
-  mv getshells ${CRPROG}
+  mv getshells ./${CRPROG}
 else
   echo "Crystal-lang not found."
 fi
@@ -97,6 +97,6 @@ fi
 for i in ${CPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${AWK} ${CRPROG} ${PSHELL} 
 do
   echo "################################################"
-  echo $i
-  /usr/bin/time -f "\t%E real" ./${i}
+  echo "$i"
+  /usr/bin/time -f "\t%E real" "./${i}"
 done
