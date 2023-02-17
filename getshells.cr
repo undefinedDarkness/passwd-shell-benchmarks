@@ -11,6 +11,6 @@ if File.exists?("passwd")
    end
 
    shellcnt.each do |key, value|
-   printf("%-20s%-8s%-d\n", key, ":", value)
+      printf("%-20s%-8s%-d\n", key, ":", value)
    end
 end
