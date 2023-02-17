@@ -2,7 +2,7 @@
 
 shellcnt = {}
 
-if File.exists?("passwd")
+if File.exist?("passwd")
    f = File.foreach("passwd") do |line|
    line.chomp!
    gecos = line.split(':')
@@ -19,4 +19,3 @@ if File.exists?("passwd")
   end 
 
 end
-

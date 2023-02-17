@@ -2,7 +2,8 @@
 
 # Check for C Compiler
 if [ -n "${CC}" ];then
-  CC=${CC}
+  # CC=${CC} # why are you assigning $CC to itsself
+  : # Do nothing, since $CC was defined
 elif [ -n "$(which clang)" ];then
   CC=clang
 elif [ -n "$(which gcc)" ];then
@@ -12,8 +13,8 @@ elif [ -n "$(which cc)" ];then
 fi
 
 if [ -n "${CC}" ];then
-  CPROG=a.out
-  ${CC} -O3 getshells.c
+  CPROG=getshells-c
+  ${CC} -O3 getshells.c -o ${CPROG}
 else
   echo "C Compiler not found."
 fi
@@ -27,10 +28,10 @@ else
 fi
 
 # Check for golang compiler
-if [ -n "(which go)" ];then
+if [ -n "$(which go)" ];then # literal string will always return true value
   GOPROG=getshells-go
-  go build main.go
-  mv main ${GOPROG}
+  go build getshells.go
+  mv getshells ${GOPROG}
 else
   echo "Golang compiler not found."
 fi
