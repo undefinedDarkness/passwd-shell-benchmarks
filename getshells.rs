@@ -14,8 +14,6 @@ fn main() {
     let contents: String = fs::read_to_string(file_path).expect("unable to open file");
 
     for line in contents.lines() {
-        // let mut vec = line.split(":").collect::<Vec<_>>();
-        //let shell = line.split(":").collect::<Vec<_>>().pop().unwrap();
         let shell = line.rsplit_once(':').unwrap().1;
         shellmap.entry(shell)
             .and_modify(|count| *count+=1)
