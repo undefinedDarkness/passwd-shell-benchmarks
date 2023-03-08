@@ -1,20 +1,20 @@
 #!/usr/bin/env crystal
 
-# Define a Hash to store the count of each login shell
+# Create an empty hash to store shell and its count
 shellcnt = Hash(String, Int32).new(0)
 
-# Open the passwd file and iterate over each line
+# Open passwd file and read line by line
 File.open("passwd") do |file|
   file.each_line do |line|
-    # Split the line into fields using colon as the delimiter
-    # Extract the login shell from the last field
-    shell = line.chomp.rpartition(':')[-1]
-    # Increment the count of this login shell in the Hash
+    # Extract the shell from the last field of the line
+    shell = line.split(':').last.chomp
+
+    # Increment the count for the given shell in the hash
     shellcnt[shell] += 1
   end
 end
 
-# Iterate over the Hash and print the counts for each login shell
-shellcnt.each do |key, value|
-  printf("%-20s%-8s%-d\n", key, ":", value)
+# Print the shell count in formatted output
+shellcnt.each do |shell, count|
+  printf("%-20s%-8s%-d\n", shell, ":", count)
 end
