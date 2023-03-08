@@ -4,11 +4,12 @@ version = "1.0.0"
 edition = "2021"
 authors = ["CordlessCoder"]
 
+
 [profile.release]
 opt-level = 3
 lto = true
+panic = "abort"
+
 
 [target.'cfg(target_feature = "avx")'.dependencies]
 ahash = "0.8.3"
-
-[dependencies]
