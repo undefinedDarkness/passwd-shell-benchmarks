@@ -3,32 +3,30 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 )
 
 func main() {
-	shells := make(map[string]int)
 
 	file, err := os.Open("passwd")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		fields := strings.Split(line, ":")
-		shell := fields[len(fields)-1]
-		shells[shell]++
+	var us = map[string]int{}
+
+	s := bufio.NewScanner(file)
+	for s.Scan() {
+		linez := s.Text()
+		result := strings.Split(linez, ":")
+		// fmt.Println(result[0], result[6])
+		us[result[6]] += 1;
 	}
 
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-
-	for shell, count := range shells {
-		fmt.Printf("%-25s : %5d\n", shell, count)
+	for kk, vv := range us {
+            fmt.Printf("%v:\t%v\n", kk, vv)
 	}
 }
