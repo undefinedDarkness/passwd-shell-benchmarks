@@ -137,7 +137,7 @@ LIST_HYPER="${LUA_HYPER} ${CPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPR
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
 
-	hyperfine $LIST_HYPER
+	hyperfine -i $LIST_HYPER
 else
 	echo "Hyperfine not found, using rudimentary benchmarking"
 
