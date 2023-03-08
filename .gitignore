@@ -4,3 +4,5 @@ getshells
 getshells-*
 **/target/**
 **/release/**
+**/.ccls-cache/**
+.mypy_cache
