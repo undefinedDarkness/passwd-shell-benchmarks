@@ -8,8 +8,8 @@ int main()
 {
    FILE *fp1;
    char line[256], shell[32];
-   char shells[16][32];
-   int shellcnt[16];
+   char shells[32][32];
+   int shellcnt[32];
    int i, j, k=0, numshells=0, len, mflag;
 
    // initialize shell and shellcount arrays
