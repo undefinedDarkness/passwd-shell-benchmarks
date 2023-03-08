@@ -1,17 +1,11 @@
-#!/usr/bin/env pwsh 
+#!/usr/bin/env pwsh
 
-$shells = @{}
+# Read the passwd file and count the instances of each login shell (the last field)
+$shells = Get-Content -Path "./passwd" | ForEach-Object { ($_ -split ':')[-1] } | Group-Object
 
-foreach($line in $(get-content passwd)){
-   $shell = $line.split(':')[6]
-   if($shells.ContainsKey($shell)) {
-     $shells.Set_Item($shell, $shells.$shell+1) 
-  } else {
-    $shells.Add($shell, 1)
-  }
- }
-
-foreach($sh in $shells) {
-	echo $sh, $sh.shell;
+# For each login shell, print the number of accounts using each shell
+$shells | ForEach-Object {
+    $shell = $_.Name
+    $count = $_.Count
+    Write-Output "$shell : $($count)"
 }
-
