@@ -7,9 +7,8 @@ shellcnt = Hash(String, Int32).new(0)
 File.open("passwd") do |file|
   file.each_line do |line|
     # Split the line into fields using colon as the delimiter
-    fields = line.chomp.split(':')
     # Extract the login shell from the last field
-    shell = fields[-1]
+    shell = line.chomp.rpartition(':')[-1]
     # Increment the count of this login shell in the Hash
     shellcnt[shell] += 1
   end
