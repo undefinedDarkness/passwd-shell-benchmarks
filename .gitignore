@@ -4,5 +4,6 @@ getshells
 getshells-*
 **/target/**
 **/release/**
-**/.ccls-cache/**
 .mypy_cache
+.rustc_info.json
+.ccls-cache
