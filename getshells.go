@@ -20,10 +20,9 @@ func main() {
 
 	s := bufio.NewScanner(file)
 	for s.Scan() {
-		linez := s.Text()
-		result := strings.Split(linez, ":")
-		// fmt.Println(result[0], result[6])
-		us[result[6]] += 1;
+		line := s.Text()
+        result := line[strings.LastIndex(line, ":") + 1:]
+		us[result] += 1;
 	}
 
 	for kk, vv := range us {
