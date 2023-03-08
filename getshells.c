@@ -14,13 +14,13 @@ int main()
 
    // initialize shell and shellcount arrays
 
-   for( i=0; i<16; i++) {
+   for( i=0; i<32; i++) {
 	for (j = 0; j < 32; j++) {
 	    shells[i][j] = '\0';
 	}
    }
 
-   for( i=0; i<16; i++) {
+   for( i=0; i<32; i++) {
 	shellcnt[i] = 0;
    }
 
