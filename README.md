@@ -19,9 +19,10 @@ To date, the following languages are represented:
  *  perl
  *  python
  *  ruby
- *  rust (thanks `timotheosh`!)
+ *  rust (thanks `CordlessCoder`!)
  *  crystal-lang (thanks `izder456`!)
  *  shell/awk
+ *  Lua (thanks `CordlessCoder`!)
 
 If you're an expert in a language not listed here, we welcome your contribution!
 
