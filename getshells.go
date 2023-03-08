@@ -21,7 +21,7 @@ func main() {
 	s := bufio.NewScanner(file)
 	for s.Scan() {
 		line := s.Text()
-        result := line[strings.LastIndex(line, ":") + 1:]
+        result := line[strings.LastIndexByte(line, ':') + 1:]
 		us[result] += 1;
 	}
 
