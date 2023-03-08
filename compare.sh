@@ -108,7 +108,7 @@ fi
 
 if [ -n "$(which crystal 2>/dev/null)" ]; then
 	CRPROG=getshells-cr
-	CRPROG_HYPER="./getshells-cr Crystal"
+	CRPROG_HYPER="./getshells-cr -n Crystal"
 	crystal build --release getshells.cr
 	mv getshells ./${CRPROG}
 else
@@ -131,13 +131,13 @@ else
 	echo "LuaJIT not found."
 fi
 
-LIST="${LUA} ${CPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${AWK} ${CRPROG} ${PSHELL}"
-LIST_HYPER="${LUA_HYPER} ${CPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${PLPROG_HYPER} ${JLPROG_HYPER} ${LISPPROG_HYPER} ${RBPROG_HYPER} ${AWK_HYPER} ${CRPROG_HYPER} ${PSHELL_HYPER}"
+LIST="${LUA} ${CPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${CRPROG} ${AWK} ${PSHELL}"
+LIST_HYPER="${LUA_HYPER} ${CPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${PLPROG_HYPER} ${JLPROG_HYPER} ${LISPPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${AWK_HYPER} ${PSHELL_HYPER}"
 
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
 
-	hyperfine $LIST_HYPER
+	hyperfine -N -i $LIST_HYPER
 else
 	echo "Hyperfine not found, using rudimentary benchmarking"
 
