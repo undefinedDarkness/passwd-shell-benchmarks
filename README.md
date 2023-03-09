@@ -11,6 +11,7 @@ A script is included, which runs each of the programs and times the results for 
 To date, the following languages are represented:
 
  *  c
+ *  c++ (thanks `izder456`!)
  *  go
  *  julia
  *  lisp

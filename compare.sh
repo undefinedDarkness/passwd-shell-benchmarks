@@ -19,12 +19,32 @@ elif [ -n "$(which cc 2>/dev/null)" ]; then
 	CC=cc
 fi
 
+# Check for C++ Compiler
+if [ -n "${CXX}" ]; then
+	# CXX=${CXX} # why are you assigning $CC to itsself
+	: # Do nothing, since $CC was defined
+elif [ -n "$(which clang++ 2>/dev/null)" ]; then
+	CXX=clang++
+elif [ -n "$(which g++ 2>/dev/null)" ]; then
+	CXX=g++
+elif [ -n "$(which c++ 2>/dev/null)" ]; then
+	CXX=c++
+fi
+
 if [ -n "${CC}" ]; then
 	CPROG=getshells-c
 	CPROG_HYPER="./getshells-c -n C"
 	${CC} -O3 getshells.c -o ${CPROG}
 else
 	echo "C Compiler not found."
+fi
+
+if [ -n "${CXX}" ]; then
+	CPPPROG=getshells-cpp
+	CPPPROG_HYPER="./getshells-cpp -n C++"
+	${CXX} -O3 getshells.cpp -o ${CPPPROG}
+else
+	echo "C++ Compiler not found."
 fi
 
 # Check for rust compiler
@@ -131,8 +151,8 @@ else
 	echo "LuaJIT not found."
 fi
 
-LIST="${LUA} ${CPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${CRPROG} ${AWK} ${PSHELL}"
-LIST_HYPER="${LUA_HYPER} ${CPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${PLPROG_HYPER} ${JLPROG_HYPER} ${LISPPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${AWK_HYPER} ${PSHELL_HYPER}"
+LIST="${LUA} ${CPROG} ${CPPPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${CRPROG} ${AWK} ${PSHELL}"
+LIST_HYPER="${LUA_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${PLPROG_HYPER} ${JLPROG_HYPER} ${LISPPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${AWK_HYPER} ${PSHELL_HYPER}"
 
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
