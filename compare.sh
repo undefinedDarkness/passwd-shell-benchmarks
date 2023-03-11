@@ -158,7 +158,7 @@ LIST_HYPER="${LUA_HYPER} ${LUAJIT_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPRO
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
 
-	hyperfine -N -i $LIST_HYPER
+	hyperfine -i $LIST_HYPER --warmup 5 -N
 else
 	echo "Hyperfine not found, using rudimentary benchmarking"
 
