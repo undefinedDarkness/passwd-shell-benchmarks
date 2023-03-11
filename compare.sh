@@ -34,7 +34,7 @@ fi
 if [ -n "${CC}" ]; then
 	CPROG=getshells-c
 	CPROG_HYPER="./getshells-c -n C"
-	${CC} -O3 getshells.c -o ${CPROG}
+	${CC} -march=native -O3 getshells.c -o ${CPROG}
 else
 	echo "C Compiler not found."
 fi
@@ -42,7 +42,7 @@ fi
 if [ -n "${CXX}" ]; then
 	CPPPROG=getshells-cpp
 	CPPPROG_HYPER="./getshells-cpp -n C++"
-	${CXX} -O3 getshells.cpp -o ${CPPPROG}
+	${CXX} -march=native -O3 getshells.cpp -o ${CPPPROG}
 else
 	echo "C++ Compiler not found."
 fi
@@ -51,6 +51,7 @@ fi
 if [ -n "$(which cargo 2>/dev/null)" ]; then
 	RSPROG="release/getshells"
 	RSPROG_HYPER="./release/getshells -n Rust"
+	RUSTFLAGS="-C target-cpu=native"
 	cd "getshells_rust" || echo "getshells_rust folder not found"
 	cargo build --release --all-features --target-dir ..
 	cd ".."
@@ -145,14 +146,14 @@ fi
 
 # Check for LuaJIT
 if [ -n "$(which luajit 2>/dev/null)" ]; then
-	LUA=getshells.luajit
-	LUA_HYPER="./getshells.luajit -n LuaJIT"
+	LUAJIT=getshells.luajit
+	LUAJIT_HYPER="./getshells.luajit -n LuaJIT"
 else
 	echo "LuaJIT not found."
 fi
 
-LIST="${LUA} ${CPROG} ${CPPPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${CRPROG} ${AWK} ${PSHELL}"
-LIST_HYPER="${LUA_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${PLPROG_HYPER} ${JLPROG_HYPER} ${LISPPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${AWK_HYPER} ${PSHELL_HYPER}"
+LIST="${LUA} ${LUAJIT} ${CPROG} ${CPPPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${RBPROG} ${CRPROG} ${PLPROG} ${AWK} ${LISPPROG} ${PSHELL}"
+LIST_HYPER="${LUA_HYPER} ${LUAJIT_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${JLPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${PLPROG_HYPER} ${AWK_HYPER} ${LISPPROG_HYPER} ${PSHELL_HYPER}"
 
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
@@ -161,7 +162,7 @@ if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 else
 	echo "Hyperfine not found, using rudimentary benchmarking"
 
-	for i in ${CPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${LISPPROG} ${RBPROG} ${AWK} ${CRPROG} ${PSHELL}; do
+	for i in ${LIST}; do
 		echo "################################################"
 		echo "$i"
 		$TIME -f "%E\nMax memory usage: %MK" "./${i}"
