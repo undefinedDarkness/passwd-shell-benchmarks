@@ -4,6 +4,7 @@ getshells
 getshells-*
 **/target/**
 **/release/**
+**/Cargo.lock
 .mypy_cache
 .rustc_info.json
 .ccls-cache
