@@ -106,7 +106,7 @@ fn main() {
                     // println!("{:?}", unsafe { std::str::from_utf8_unchecked(&new_buf) })
                     thread_distributor.next().unwrap().1.send(new_buf).expect("Failed to send, the channel has been deallocated while the loop hasn't stopped somehow");
                 }
-                Err(ErrorKind::Interrupted) => continue,
+                Err(err) if err.kind() == ErrorKind::Interrupted => continue,
                 Err(err) => panic!("{}", err),
             }
         }

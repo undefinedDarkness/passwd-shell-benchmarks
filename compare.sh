@@ -49,14 +49,14 @@ fi
 
 # Check for rust compiler
 if [ -n "$(which cargo 2>/dev/null)" ]; then
+	export RUSTFLAGS="-C target-cpu=native"
 	RSPROG="release/getshells"
 	RSPROG_HYPER="./release/getshells -n Rust"
-	RUSTFLAGS="-C target-cpu=native"
 	cd "getshells_rust" || echo "getshells_rust folder not found"
 	cargo build --release --all-features --target-dir ..
 	cd ".."
-	M_RSPROG="release/getshells_multi"
-	M_RSPROG_HYPER="./release/getshells_multi -n Rust(multithread)"
+	M_RSPROG="release/getshells_multi release/multireader"
+	M_RSPROG_HYPER="./release/getshells_multi -n Rust(multithread) ./release/multireader -n Rust(better_multithreaded)"
 	cd "getshells_multi" || echo "getshells_multi folder not found"
 	cargo build --release --all-features --target-dir ..
 	cd ".."
