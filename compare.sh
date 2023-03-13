@@ -55,6 +55,11 @@ if [ -n "$(which cargo 2>/dev/null)" ]; then
 	cd "getshells_rust" || echo "getshells_rust folder not found"
 	cargo build --release --all-features --target-dir ..
 	cd ".."
+	M_RSPROG="release/getshells_multi"
+	M_RSPROG_HYPER="./release/getshells_multi -n Rust(multithread)"
+	cd "getshells_multi" || echo "getshells_multi folder not found"
+	cargo build --release --all-features --target-dir ..
+	cd ".."
 else
 	echo "cargo was not f ound"
 fi
@@ -152,8 +157,8 @@ else
 	echo "LuaJIT not found."
 fi
 
-LIST="${LUA} ${LUAJIT} ${CPROG} ${CPPPROG} ${RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${RBPROG} ${CRPROG} ${PLPROG} ${AWK} ${LISPPROG} ${PSHELL}"
-LIST_HYPER="${LUA_HYPER} ${LUAJIT_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${JLPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${PLPROG_HYPER} ${AWK_HYPER} ${LISPPROG_HYPER} ${PSHELL_HYPER}"
+LIST="${LUA} ${LUAJIT} ${CPROG} ${CPPPROG} ${RSPROG} ${M_RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${RBPROG} ${CRPROG} ${PLPROG} ${AWK} ${LISPPROG} ${PSHELL}"
+LIST_HYPER="${LUA_HYPER} ${LUAJIT_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${M_RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${JLPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${PLPROG_HYPER} ${AWK_HYPER} ${LISPPROG_HYPER} ${PSHELL_HYPER}"
 
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
