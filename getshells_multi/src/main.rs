@@ -2,7 +2,7 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{stdout, Read, Write},
+    io::{stdout, ErrorKind, Read, Write},
     sync::{atomic::AtomicBool, mpsc},
     thread::scope,
 };
@@ -13,7 +13,6 @@ static STOPPED: AtomicBool = AtomicBool::new(false);
 
 fn main() {
     let mut file = File::open("passwd").expect("Failed to open passwd");
-    // let file = BufReader::with_capacity(1024 * 64, file);
     const CHUNK_DEFAULT: usize = 64;
     const THREAD_COUNT_DEFAULT: u64 = 9;
 
@@ -59,6 +58,7 @@ fn main() {
                                         .or_insert_with(|| (shell.to_vec(), 1));
                                 };
                             });
+                            drop(message)
                         } else {
                             if STOPPED.load(std::sync::atomic::Ordering::Acquire) {
                                 break;
@@ -106,6 +106,7 @@ fn main() {
                     // println!("{:?}", unsafe { std::str::from_utf8_unchecked(&new_buf) })
                     thread_distributor.next().unwrap().1.send(new_buf).expect("Failed to send, the channel has been deallocated while the loop hasn't stopped somehow");
                 }
+                Err(ErrorKind::Interrupted) => continue,
                 Err(err) => panic!("{}", err),
             }
         }
