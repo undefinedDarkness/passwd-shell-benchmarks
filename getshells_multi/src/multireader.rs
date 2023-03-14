@@ -2,12 +2,13 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{self, stdout, BufRead, BufReader, ErrorKind, Read, Seek, Write},
+    io::{self, stdout, BufReader, ErrorKind, Read, Seek, Write},
     path::Path,
     thread::scope,
 };
 
 use ahash::AHashMap;
+use bstr::io::BufReadExt;
 use memchr::memrchr;
 
 const PATH: &str = "passwd";
@@ -29,7 +30,9 @@ fn main() {
         None => num_cpus::get() as u64,
     };
 
-    let read_chunk_size = match args.next().map(|x| x.parse::<usize>()) {
+    let file = File::open(PATH).unwrap();
+
+    let read_chunk_size = match args.next().map(|x| x.parse::<u64>()) {
         Some(Ok(n)) => {
             if n == 0 {
                 eprintln!("Chunk size(arg2, KiB) cannot be zero");
@@ -40,8 +43,6 @@ fn main() {
         Some(Err(err)) => panic!("Failed to parse the second argument(chunk size),{err}"),
         None => 64,
     } * 1024;
-
-    let file = File::open(PATH).unwrap();
 
     let thread_configs = ThreadConfig::generate_chunked(&file, thread_count, LINE_FEED).unwrap();
 
@@ -92,39 +93,28 @@ struct ThreadConfig {
 }
 
 impl ThreadConfig {
-    pub fn run<P>(self, path: P, chunk_size: usize) -> io::Result<AHashMap<Vec<u8>, u32>>
+    pub fn run<P>(self, path: P, chunk_size: u64) -> io::Result<AHashMap<Vec<u8>, u32>>
     where
         P: AsRef<Path>,
     {
         let mut file = File::open(path)?;
         file.seek(std::io::SeekFrom::Start(self.start as u64))?;
         let file = file.take(self.length as u64);
-        let reader = BufReader::with_capacity(chunk_size, file);
+        let mut reader = BufReader::with_capacity(chunk_size as usize, file);
 
         let mut hashmap = AHashMap::with_capacity(32);
 
-        reader
-            .split(LINE_FEED)
-            .try_for_each(|line| -> io::Result<()> {
-                let line = line?;
-                if let Some(colon_idx) = memrchr(b':', &line)
-                // if let Some(colon_idx) = line
-                //     .iter()
-                //     .enumerate()
-                //     .rev()
-                //     // This mess finds the first `:` from the end of the line
-                //     .find(|(_, &b)| b == b':')
-                //     .map(|(idx, _)| idx + 1)
-                {
-                    let shell = &line[colon_idx + 1..];
-                    hashmap
-                        .raw_entry_mut()
-                        .from_key(shell)
-                        .and_modify(|_, v| *v += 1)
-                        .or_insert_with(|| (shell.to_vec(), 1));
-                };
-                Ok(())
-            })?;
+        reader.for_byte_line(|line| -> io::Result<bool> {
+            if let Some(colon_idx) = memrchr(b':', line) {
+                let shell = &line[colon_idx + 1..];
+                hashmap
+                    .raw_entry_mut()
+                    .from_key(shell)
+                    .and_modify(|_, v| *v += 1)
+                    .or_insert_with(|| (shell.to_vec(), 1));
+            };
+            Ok(true)
+        })?;
         Ok(hashmap)
     }
 
