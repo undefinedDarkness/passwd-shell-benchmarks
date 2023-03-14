@@ -1,70 +1,44 @@
 #include <stdio.h>
-#include <string.h>
-// demo program to read a unix password file and show 
-// how many instances of each login shell are found
-// unlike perl/python, c doesn't have associative arrays, so....
 
-int main()
-{
-   FILE *fp1;
-   char line[256], shell[32];
-   char shells[32][32];
-   int shellcnt[32];
-   int i, j, k=0, numshells=0, len, mflag;
+// For mmap()
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-   // initialize shell and shellcount arrays
+int main() {
+	int fd = open("shells-list", O_RDONLY);
+	struct stat s;
+	fstat(fd, &s);
+	size_t fs = s.st_size;
+	char *contents = mmap(0, fs, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 
-   for( i=0; i<32; i++) {
-	for (j = 0; j < 32; j++) {
-	    shells[i][j] = '\0';
-	}
-   }
+	char* shellName[128];
+	int   shellCount[128];
+	memset(&shellCount, 0, 512);
+	//int *shellCount = calloc(100,4);
 
-   for( i=0; i<32; i++) {
-	shellcnt[i] = 0;
-   }
+	const char *colonPos;
 
-   // read each passwd line and get the shell
-   fp1= fopen ("passwd", "r");
-   while (fgets(line, sizeof(line), fp1)) {
-	len = strlen(line);
-	for (j = len; j >= 0; j--) {
-	   if (line[j] == ':') {
-	     strncpy(shell, &line[++j], 32);
-	     shell[strlen(shell) -1] = '\0';
-	     break;
-	   }
+	while (*contents != '\0') {
+		if (*contents == ':')
+			colonPos = contents+1;
+		else if (*contents == '\n') {
+			*contents = '\0';
+			size_t length = contents - colonPos;
+			int id = (*(colonPos+length-3)^length + *(colonPos+length-4));//length^(*(colonPos+1) + *(colonPos+length-3)) % 50;
+			shellName[id] = colonPos;
+			shellCount[id]++;
+		}
+		contents++;
 	}
 
-	// if there are no shells, add immediately to first slot
-	if (numshells == 0) {
-	   strcpy(shells[0], shell);
-	   shellcnt[0] = 1;
-	   numshells = 1;
-	} else {
-	   // check to see if shell already in array 
-	   mflag = 0;
-	   for(k = 0; k < numshells; k++) {
-		if (strcmp(shells[k], shell) == 0) {
-		   mflag = 1;
-		   shellcnt[k] += 1;
-	      } 
+	for (int i = 0; i<100;i++) {
+		if (shellCount[i] > 0) {
+			printf("%s\t%d\n", shellName[i], shellCount[i]);
+		}
 	}
 
-	// no match, add new shell entry 
-	if (mflag == 0) {
-	   strcpy(shells[numshells], shell);
-	   shellcnt[numshells] +=1;
-	   numshells++;
-	}
- 
-	}
-    }
-    fclose(fp1);
-
-
-    // display shell tally
-    for ( i = 0; i < numshells; i++ ) {
-	printf("%-18s:\t%d\n", shells[i], shellcnt[i]);
-    }
+	munmap(contents, fs);
+	close(fd);
 }
