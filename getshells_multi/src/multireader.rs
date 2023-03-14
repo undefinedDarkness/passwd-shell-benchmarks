@@ -2,22 +2,27 @@
 use std::{
     any::Any,
     fmt::Display,
-    fs::File,
-    io::{self, stdout, BufReader, ErrorKind, Read, Seek, Write},
-    path::Path,
+    fs::OpenOptions,
+    io::{self, stdout, Write},
     thread::scope,
 };
 
 use ahash::AHashMap;
-use bstr::io::BufReadExt;
+use bstr::ByteSlice;
 use memchr::memrchr;
+use memmap2::{Mmap, MmapOptions};
 
 const PATH: &str = "passwd";
 
 const LINE_FEED: u8 = b'\n';
 
+const EFFICIENT_CORE_DIVISOR: usize = 6;
+
 fn main() {
     let mut args = std::env::args().skip(1);
+
+    let file = OpenOptions::new().read(true).open(PATH).unwrap();
+    let mut mapped = unsafe { MmapOptions::new().map(&file).unwrap() };
 
     let thread_count = match args.next().map(|x| x.parse::<u64>()) {
         Some(Ok(n)) => {
@@ -28,31 +33,28 @@ fn main() {
             n
         }
         Some(Err(err)) => panic!("Failed to parse the first argument(thread count),{err}"),
-        None => num_cpus::get() as u64,
+        None => {
+            let mut cores = num_cpus::get_physical();
+            if cores > 6 {
+                let remainder = cores % EFFICIENT_CORE_DIVISOR;
+                if remainder != 0 {
+                    cores = cores - remainder + EFFICIENT_CORE_DIVISOR
+                }
+            };
+            cores as u64
+        }
     };
 
-    let path = std::fs::canonicalize(PATH).unwrap();
-    let file = File::open(&path).unwrap();
+    let _ = mapped.advise(memmap2::Advice::WillNeed);
+    let _ = mapped.lock();
 
-    let read_chunk_size = match args.next().map(|x| x.parse::<u64>()) {
-        Some(Ok(n)) => {
-            if n == 0 {
-                eprintln!("Chunk size(arg2, KiB) cannot be zero");
-                std::process::exit(2)
-            }
-            n
-        }
-        Some(Err(err)) => panic!("Failed to parse the second argument(chunk size),{err}"),
-        None => 64,
-    } * 1024;
+    let thread_configs = ThreadConfig::generate_chunked(&mapped, thread_count, LINE_FEED).unwrap();
 
-    let thread_configs = ThreadConfig::generate_chunked(&file, thread_count, LINE_FEED).unwrap();
-
-    let thread_path = path.as_path();
     let hashmap = scope(|s| {
+        let mapped = &mapped;
         let threads: Vec<_> = thread_configs
             .into_iter()
-            .map(|config| s.spawn(move || config.run(thread_path, read_chunk_size)))
+            .map(|config| s.spawn(move || config.run(mapped)))
             .collect();
         let mut threads = threads.into_iter();
         let mut hashmap = threads.next().unwrap().join().unwrap().unwrap();
@@ -86,23 +88,18 @@ impl<'a> Display for UnsafeBytes<'a> {
 
 #[derive(Debug)]
 struct ThreadConfig {
-    start: usize,
-    length: usize,
+    start: u64,
+    length: u64,
 }
 
 impl ThreadConfig {
-    pub fn run<P>(self, path: P, chunk_size: u64) -> io::Result<AHashMap<Vec<u8>, u32>>
-    where
-        P: AsRef<Path>,
-    {
-        let mut file = File::open(path)?;
-        file.seek(std::io::SeekFrom::Start(self.start as u64))?;
-        let file = file.take(self.length as u64);
-        let mut reader = BufReader::with_capacity(chunk_size as usize, file);
-
+    pub fn run(self, map: &Mmap) -> io::Result<AHashMap<Vec<u8>, u32>> {
+        let (start, length) = (self.start as usize, self.length as usize);
+        let _ = map.advise_range(memmap2::Advice::Sequential, start, length);
         let mut hashmap = AHashMap::with_capacity(32);
 
-        reader.for_byte_line(|line| -> io::Result<bool> {
+        let owned: &[u8] = unsafe { map.get_unchecked(start..start + length) };
+        owned.lines().for_each(|line| {
             if let Some(colon_idx) = memrchr(b':', line) {
                 let shell = &line[colon_idx + 1..];
                 hashmap
@@ -111,59 +108,26 @@ impl ThreadConfig {
                     .and_modify(|_, v| *v += 1)
                     .or_insert_with(|| (shell.to_vec(), 1));
             };
-            Ok(true)
-        })?;
+        });
         Ok(hashmap)
     }
 
-    pub fn generate_chunked<R: Read + Seek>(
-        mut file: R,
-        thread_count: u64,
-        sep: u8,
-    ) -> std::io::Result<Vec<Self>> {
-        let size = file.seek(std::io::SeekFrom::End(0))?;
+    pub fn generate_chunked(map: &Mmap, thread_count: u64, sep: u8) -> std::io::Result<Vec<Self>> {
+        let size = (map.len().max(1) - 1) as u64;
 
-        const LOOKAHEAD_BUMP_SIZE: u64 = 2048;
-
-        let chunk_size = (size / thread_count) as usize;
-        let mut buf = Vec::with_capacity(LOOKAHEAD_BUMP_SIZE as usize);
+        let chunk_size = size / thread_count;
 
         let mut thread_configs = Vec::with_capacity(thread_count as usize);
-        let mut last_end = 0usize;
+        let mut last_end = 0u64;
         for _ in 0..thread_count {
             let start = last_end;
-            if start as u64 >= size {
+            if start >= size {
                 break;
             }
-            let chunk_len = chunk_size.min(size as usize - start);
-            let offset = 'inner: {
-                let mut offset = 0;
-                let Ok(_) = file.seek(std::io::SeekFrom::Start((start + chunk_len) as u64)) else {
-                break 'inner offset;
-            };
-                loop {
-                    buf.clear();
-                    match file
-                        .by_ref()
-                        .take(LOOKAHEAD_BUMP_SIZE)
-                        .read_to_end(&mut buf)
-                    {
-                        Ok(0) => {
-                            // EOF condition
-                            break offset;
-                        }
-                        Ok(read) => {
-                            if let Some(end) = buf.iter().position(|&b| b == sep) {
-                                break offset + end;
-                            } else {
-                                offset += read;
-                            }
-                        }
-                        Err(err) if err.kind() == ErrorKind::Interrupted => continue,
-                        Err(err) => Err(err)?,
-                    };
-                }
-            };
+            let chunk_len = chunk_size.min(size - start);
+            let advise_start = (start + chunk_len) as usize;
+            let owned = unsafe { map.get_unchecked(advise_start..) };
+            let offset = owned.find_byte(sep).unwrap_or(0) as u64;
             let length = offset + chunk_len;
             thread_configs.push(ThreadConfig { start, length });
             last_end = start + length + 1;
@@ -174,18 +138,25 @@ impl ThreadConfig {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
+    use std::{
+        fs::File,
+        io::{Cursor, Seek},
+    };
+
+    use memmap2::Mmap;
 
     use crate::ThreadConfig;
 
     #[test]
     fn thread_configs() {
         const COUNT: u64 = 100;
-        let input: Vec<_> = (0..COUNT).map(|x| (x % 2) as u8).collect();
-        let size = input.len();
+        let file = File::open("Cargo.toml").unwrap();
+        let size = file.seek(std::io::SeekFrom::End(0)).unwrap();
+        let _ = file.seek(std::io::SeekFrom::Start(0));
+        let map = unsafe { Mmap::map(&file).unwrap() };
         for threads in 1..COUNT {
-            let input = Cursor::new(&input);
-            let thread_configs = ThreadConfig::generate_chunked(input, threads, b'0').unwrap();
+            // let input = Cursor::new(&input);
+            let thread_configs = ThreadConfig::generate_chunked(&map, threads, b'0').unwrap();
             assert_eq!(
                 thread_configs.iter().map(|x| x.length).sum::<usize>(),
                 size,
