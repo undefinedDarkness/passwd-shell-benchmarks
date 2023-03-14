@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 int main() {
-	int fd = open("shells-list", O_RDONLY);
+	int fd = open("passwd", O_RDONLY);
 	struct stat s;
 	fstat(fd, &s);
 	size_t fs = s.st_size;
