@@ -1,5 +1,6 @@
 #![feature(hash_raw_entry)]
 use std::{
+    any::Any,
     fmt::Display,
     fs::File,
     io::{self, stdout, BufReader, ErrorKind, Read, Seek, Write},
@@ -30,7 +31,8 @@ fn main() {
         None => num_cpus::get() as u64,
     };
 
-    let file = File::open(PATH).unwrap();
+    let path = std::fs::canonicalize(PATH).unwrap();
+    let file = File::open(&path).unwrap();
 
     let read_chunk_size = match args.next().map(|x| x.parse::<u64>()) {
         Some(Ok(n)) => {
@@ -46,26 +48,22 @@ fn main() {
 
     let thread_configs = ThreadConfig::generate_chunked(&file, thread_count, LINE_FEED).unwrap();
 
+    let thread_path = path.as_path();
     let hashmap = scope(|s| {
         let threads: Vec<_> = thread_configs
             .into_iter()
-            .map(|config| s.spawn(move || config.run(PATH, read_chunk_size)))
+            .map(|config| s.spawn(move || config.run(thread_path, read_chunk_size)))
             .collect();
         let mut threads = threads.into_iter();
         let mut hashmap = threads.next().unwrap().join().unwrap().unwrap();
         threads
-            .try_for_each(|handle| -> io::Result<()> {
-                handle
-                    .join()
-                    .expect("Failed to join thread")
-                    .unwrap()
-                    .into_iter()
-                    .for_each(|(k, v)| {
-                        hashmap
-                            .entry(k)
-                            .and_modify(|count| *count += v)
-                            .or_insert(v);
-                    });
+            .try_for_each(|handle| -> Result<(), Box<dyn Any + Send + 'static>> {
+                handle.join()?.unwrap().into_iter().for_each(|(k, v)| {
+                    hashmap
+                        .entry(k)
+                        .and_modify(|count| *count += v)
+                        .or_insert(v);
+                });
                 Ok(())
             })
             .unwrap();
