@@ -5,6 +5,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+// For memset()
+#include <string.h>
 
 int main() {
 	int fd = open("passwd", O_RDONLY);
