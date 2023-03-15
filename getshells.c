@@ -5,6 +5,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+// For memset()
+#include <string.h>
 
 int main() {
 	int fd = open("passwd", O_RDONLY);
@@ -27,7 +29,7 @@ int main() {
 			*contents = '\0';
 			size_t length = contents - colonPos;
 			int id = (*(colonPos+length-3)^length + *(colonPos+length-4));//length^(*(colonPos+1) + *(colonPos+length-3)) % 50;
-			shellName[id] = colonPos;
+			shellName[id] = (char*)colonPos; /* cast away const-ness */
 			shellCount[id]++;
 		}
 		contents++;
