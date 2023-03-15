@@ -116,7 +116,6 @@ int main()
 		{
 			char buf[128];
 			char *p = buf;
-			int uhh;
 
 			for(const char *c = sh->name; *c; ++c)
 				*p++ = *c;
