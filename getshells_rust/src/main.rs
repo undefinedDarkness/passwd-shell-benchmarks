@@ -5,13 +5,13 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{self, stdout, BufRead, BufReader, Write},
+    io::{self, stdout, Write},
 };
 
-#[cfg(target_feature = "avx")]
 use ahash::AHashMap;
-#[cfg(not(target_feature = "avx"))]
-use std::collections::HashMap;
+use bstr::ByteSlice;
+use memchr::memrchr;
+use memmap2::Mmap;
 
 fn main() {
     const FILE: &str = "passwd";
@@ -20,39 +20,21 @@ fn main() {
     const CHUNK: usize = 64 * 1024;
 
     let file = File::open(FILE).expect("failed to read {FILE}");
-    let file = BufReader::with_capacity(CHUNK, file);
+    let mapped = unsafe { Mmap::map(&file).unwrap() };
     //
     // Use aHash on AVX enabled platforms, should be faster
-    #[cfg(target_feature = "avx")]
-    let mut hs = AHashMap::with_capacity(512); // Initial capacity 32 performed the best at the time
-                                               // of testing, probably a fragile optimization
-    #[cfg(not(target_feature = "avx"))]
-    let mut hs = HashMap::with_capacity(512);
+    let mut hs = AHashMap::with_capacity(32); // Initial capacity 32 performed the best at the time
+                                              // of testing, probably a fragile optimization
     let mut stdout = stdout().lock();
-    let _ = file.split(b'\n').try_for_each(|line| -> io::Result<()> {
-        let line = line?;
-        let colon_idx = line
-            .iter()
-            .enumerate()
-            .rev()
-            // This mess finds the first `:` from the end of the line
-            .find(|(_, &b)| b == b':')
-            .map(|(idx, _)| idx)
-            .unwrap_or_default();
+    mapped.lines().for_each(|line| {
+        let colon_idx = memrchr(b':', line).unwrap_or(0);
 
-        // Only needed if we assume the file can be CRLF encoded
-        // (it can't because that'd be weird)
-        //
-        // if line.last() == Some(&b'\r') {
-        //     line.pop();
-        // }
         let shell = &line[colon_idx + 1..];
         hs.raw_entry_mut()
             .from_key(shell)
             // .from_key(&line[colon_idx + 1..])
             .and_modify(|_, v| *v += 1)
             .or_insert_with(|| (shell.to_vec(), 1));
-        Ok(())
     });
 
     hs.into_iter().for_each(|(shell, count)| {
