@@ -5,7 +5,7 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{self, stdout, Write},
+    io::{stdout, Write},
 };
 
 use ahash::AHashMap;
@@ -15,14 +15,10 @@ use memmap2::Mmap;
 
 fn main() {
     const FILE: &str = "passwd";
-    // Read buffer size is also a fragile optimization, mess around with capcacities 64 Kib -
-    // 1024 Kib to find the best result
-    const CHUNK: usize = 64 * 1024;
 
     let file = File::open(FILE).expect("failed to read {FILE}");
     let mapped = unsafe { Mmap::map(&file).unwrap() };
     //
-    // Use aHash on AVX enabled platforms, should be faster
     let mut hs = AHashMap::with_capacity(32); // Initial capacity 32 performed the best at the time
                                               // of testing, probably a fragile optimization
     let mut stdout = stdout().lock();
