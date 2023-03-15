@@ -61,7 +61,7 @@ if [ -n "$(which cargo 2>/dev/null)" ]; then
 	cargo build --release --all-features --target-dir ..
 	cd ".."
 else
-	echo "cargo was not f ound"
+	echo "cargo was not found"
 fi
 
 # Check for golang compiler
@@ -135,8 +135,12 @@ fi
 if [ -n "$(which crystal 2>/dev/null)" ]; then
 	CRPROG=getshells-cr
 	CRPROG_HYPER="./getshells-cr -n Crystal"
-	crystal build --release getshells.cr
+	M_CRPROG=getshells-m-cr
+	M_CRPROG_HYPER="./getshells-m-cr -n Crystal(multithread)" 
+	crystal build --stats --progress --time --mcpu=native --verbose --release getshells_m.cr
+	crystal build --stats --progress --time --mcpu=native --verbose --release getshells.cr
 	mv getshells ./${CRPROG}
+	mv getshells_m ./${M_CRPROG}
 else
 	echo "Crystal-lang not found."
 fi
@@ -157,8 +161,8 @@ else
 	echo "LuaJIT not found."
 fi
 
-LIST="${LUA} ${LUAJIT} ${CPROG} ${CPPPROG} ${RSPROG} ${M_RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${RBPROG} ${CRPROG} ${PLPROG} ${AWK} ${LISPPROG} ${PSHELL}"
-LIST_HYPER="${LUA_HYPER} ${LUAJIT_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${M_RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${JLPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${PLPROG_HYPER} ${AWK_HYPER} ${LISPPROG_HYPER} ${PSHELL_HYPER}"
+LIST="${LUA} ${LUAJIT} ${CPROG} ${CPPPROG} ${RSPROG} ${M_RSPROG} ${GOPROG} ${NODEPROG} ${PYPROG} ${PLPROG} ${JLPROG} ${RBPROG} ${CRPROG} ${M_CRPROG} ${PLPROG} ${AWK} ${LISPPROG} ${PSHELL}"
+LIST_HYPER="${LUA_HYPER} ${LUAJIT_HYPER} ${CPROG_HYPER} ${CPPPROG_HYPER} ${RSPROG_HYPER} ${M_RSPROG_HYPER} ${GOPROG_HYPER} ${NODEPROG_HYPER} ${PYPROG_HYPER} ${JLPROG_HYPER} ${RBPROG_HYPER} ${CRPROG_HYPER} ${M_CRPROG_HYPER} ${PLPROG_HYPER} ${AWK_HYPER} ${LISPPROG_HYPER} ${PSHELL_HYPER}"
 
 if [ -n "$(which hyperfine 2>/dev/null)" ]; then
 	echo "Found hyperfine, using it to benchmark"
