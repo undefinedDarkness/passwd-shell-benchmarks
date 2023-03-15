@@ -1,46 +1,59 @@
 #include <stdio.h>
-
-// For mmap()
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-// For memset()
+#include <stdlib.h>
 #include <string.h>
 
 int main() {
-	int fd = open("passwd", O_RDONLY);
-	struct stat s;
-	fstat(fd, &s);
-	size_t fs = s.st_size;
-	char *contents = mmap(0, fs, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+  /* int fd = open("passwd", O_RDONLY);
+  struct stat s;
+  fstat(fd, &s);
+  size_t fs = s.st_size;
+  char *contents = mmap(0, fs, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+  */
 
-	char* shellName[128];
-	int   shellCount[128];
-	memset(&shellCount, 0, 512);
-	//int *shellCount = calloc(100,4);
+  struct shell {
+    char name[32];
+    int count;
+  };
 
-	const char *colonPos;
+  void *heap =
+      calloc(1, 512 + sizeof(struct shell) *
+                          200); // combine allocations for both into one fat one
+  struct shell *buf = heap; // calloc(200, sizeof(buf)); // lil extra space cuz
+                            // im allocating anyway avoids memory errors
+  char *buffer = heap + (sizeof(struct shell) * 200);
 
-	while (*contents != '\0') {
-		if (*contents == ':')
-			colonPos = contents+1;
-		else if (*contents == '\n') {
-			*contents = '\0';
-			size_t length = contents - colonPos;
-			int id = (*(colonPos+length-3)^length + *(colonPos+length-4));//length^(*(colonPos+1) + *(colonPos+length-3)) % 50;
-			shellName[id] = (char*)colonPos; /* cast away const-ness */
-			shellCount[id]++;
-		}
-		contents++;
-	}
+  FILE *fp = fopen("passwd", "r");
+  size_t bufSize = 512;
+  size_t lineSize;
 
-	for (int i = 0; i<100;i++) {
-		if (shellCount[i] > 0) {
-			printf("%s\t%d\n", shellName[i], shellCount[i]);
-		}
-	}
+  size_t ts = 0;
 
-	munmap(contents, fs);
-	close(fd);
+  while ((lineSize = getline(&buffer, &bufSize, fp)) != -1) {
+    char *colon = buffer + lineSize - 6; // smallest is 7
+    while (*colon != ':')
+      colon--;
+    colon++;
+    size_t length = buffer + lineSize - colon - 1;
+    size_t id = (buffer[lineSize - 4] ^ length + buffer[lineSize - 5]) % 50; // hash(colon);
+    buf[id].count++;
+    if (0 == *buf[id].name) {
+      memcpy(buf[id].name, colon, length);
+      buf[id].name[length] = '\0';
+      ts++;
+    }
+  }
+
+  for (int i = 0; i < 100; i++) {
+    if (buf[i].count > 0) {
+      printf("%s\t%d\n", buf[i].name, buf[i].count);
+      if (!--ts)
+        break;
+    }
+  }
+
+  free(heap);
+  fclose(fp);
+  // free(buf);
+  // munmap(contents, fs);
+  // close(fd);
 }
