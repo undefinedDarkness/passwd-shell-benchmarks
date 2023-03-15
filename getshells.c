@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <tbs/types.h>
 
 /* the 64-bit FNV-1a constants */
 #define FNV_PRIME 0x00000100000001B3
@@ -33,7 +32,6 @@ struct shell
 {
 	char name[32];
 	int occurrences;
-	u32 hash;
 };
 
 int main()
@@ -89,7 +87,7 @@ int main()
 		{ \
 			const char *ac = colon + 1; \
 			int len = (word + n) - ac; \
-			u8 hash = fnv(ac, len); \
+			unsigned char hash = fnv(ac, len); \
 			struct shell *sh = &shells[hash]; \
 			if(unlikely(sh->name[0] == 0)) \
 				memcpy(sh->name, ac, len); \
