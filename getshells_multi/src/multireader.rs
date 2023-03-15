@@ -22,7 +22,7 @@ fn main() {
     let mut args = std::env::args().skip(1);
 
     let file = OpenOptions::new().read(true).open(PATH).unwrap();
-    let mut mapped = unsafe { MmapOptions::new().map(&file).unwrap() };
+    let mapped = unsafe { MmapOptions::new().map(&file).unwrap() };
 
     let thread_count = match args.next().map(|x| x.parse::<u64>()) {
         Some(Ok(n)) => {
