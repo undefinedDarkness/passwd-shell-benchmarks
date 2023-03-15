@@ -46,7 +46,7 @@ fn main() {
     };
 
     let _ = mapped.advise(memmap2::Advice::WillNeed);
-    let _ = mapped.lock();
+    // let _ = mapped.lock();
 
     let thread_configs = ThreadConfig::generate_chunked(&mapped, thread_count, LINE_FEED).unwrap();
 
