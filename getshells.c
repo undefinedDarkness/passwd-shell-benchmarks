@@ -21,8 +21,7 @@ int main() {
 
   void *heap =
       calloc(1,128*(sizeof(struct shell)+1)); // combine allocations for both into one fat one
-  struct shell *restrict buf = heap; // calloc(200, sizeof(buf)); // lil extra space cuz
-                            // im allocating anyway avoids memory errors
+  struct shell *restrict buf = heap; 
   char *buffer = heap + (sizeof(struct shell) * 128);
 
   FILE *fp = fopen("passwd", "r");
@@ -34,6 +33,7 @@ int main() {
   while ((lineSize = getline(&buffer, &bufSize, fp)) != (size_t)-1) {
 	const char* const colon = memrchr(buffer, ':', lineSize-6) + 1;			// TODO: Replace memrchr with precalculated positions once I figure out the math
     const size_t length = buffer + lineSize - colon - 1;
+	// new id generater by @crumbtoo 
 	const size_t id = (buffer[lineSize - 4] ^ length + buffer[lineSize - 5]) % 50; // hash(colon);
     buf[id].count++;
     if (0 == *buf[id].name) {
