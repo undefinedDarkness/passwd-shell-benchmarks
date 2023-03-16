@@ -1,138 +1,59 @@
+#define _GNU_SOURCE
 #include <stdio.h>
-#include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 
-/* the 64-bit FNV-1a constants */
-#define FNV_PRIME 0x00000100000001B3
-#define FNV_OFFSET 0xcbf29ce484222325
-
-#define likely(x) \
-	__builtin_expect((x),1)
-
-#define unlikely(x) \
-	__builtin_expect((x),0)
-
-/* we could try only hasing the first few characters */
-static inline long fnv(const char *s, int len)
-{
-	long hash = FNV_OFFSET;
-	for(int i = 0; i < len; ++i)
-	{
-		hash *= FNV_PRIME;
-		hash ^= s[i];
+static __always_inline char* itoa(unsigned short value, char* result) {
+	int i = 0;
+	while (value) {
+		result[9 - i++] = (value % 10) + '0';
+		value /= 10;
 	}
-
-	return hash;
+	result[10] = '\0';
+	return result+(10-i);
 }
 
-struct shell
-{
-	char name[32];
-	int occurrences;
-};
+int main() {
+  struct shell {
+    char name[20];
+	int count; 
+  };
 
-int main()
-{
-	int fd = open("passwd", O_RDONLY);
+  void *heap =
+      calloc(1,128*(sizeof(struct shell)+1)); // combine allocations for both into one fat one
+  struct shell *restrict buf = heap; 
+  char *buffer = heap + (sizeof(struct shell) * 128);
 
-	/* indexed via hash. we allocate for 256 items, because n % 2^k is
-	 * equivelant to n & 2^k. even better, the modulo will come as a natural
-	 * side effect of finitely-wide integers (overflow :3) */
-	struct shell shells[256];
+  FILE *fp = fopen("passwd", "r");
+  size_t bufSize = 128;
+  size_t lineSize;
 
-	memset(shells, 0, sizeof(shells));
+  size_t ts = 0;
 
-	/* pointer to last encountered delimiter */
-	const char *colon;
+  while ((lineSize = getline(&buffer, &bufSize, fp)) != (size_t)-1) {
+	const char* const colon = memrchr(buffer, ':', lineSize-6) + 1;			// TODO: Replace memrchr with precalculated positions once I figure out the math
+    const size_t length = buffer + lineSize - colon - 1;
+	// new id generater by @crumbtoo 
+	const size_t id = (buffer[lineSize - 4] ^ length + buffer[lineSize - 5]) % 50; // hash(colon);
+    buf[id].count++;
+    if (0 == *buf[id].name) {
+      memcpy(buf[id].name, colon, length);
+      buf[id].name[length] = '\t';
+	  buf[id].name[length+1] = '\0';
+      ts++;
+    }
+  }
 
-	/* allocate a couple extra bytes so we can read multiple at a time without worrying about segfaulting >:) */
-	size_t fs = lseek(fd, 0, SEEK_END) + sizeof(long);
+  for (int i = 0; i < 100; i++) {
+    struct shell s = buf[i];
+	  if (s.count > 0) {
+		  fputs(s.name, stdout);
+		  puts(itoa(s.count, buf));
+      if (!--ts)
+        break;
+    }
+  }
 
-	/* entire file is mapped into memory */
-	long *contents = mmap(0, fs, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-
-	while(((char*)contents)[0] != 0)
-	{
-#define elif8 \
-	     X(7) \
-	else X(6) \
-	else X(5) \
-	else X(4) \
-	else X(3) \
-	else X(2) \
-	else X(1) \
-	else X(0)
-
-#define for8 \
-	X(0) \
-	X(1) \
-	X(2) \
-	X(3) \
-	X(4) \
-	X(5) \
-	X(6) \
-	X(7)
-		/* should only access word[0] - word[7] */
-		const char *word = (char*)contents;
-
-
-		/* very important that we check for eol first so we don't hook onto a
-		 * colon that occurs after the eol */
-
-#define X(n) \
-		if(unlikely(word[n] == '\n')) \
-		{ \
-			const char *ac = colon + 1; \
-			int len = (word + n) - ac; \
-			unsigned char hash = fnv(ac, len); \
-			struct shell *sh = &shells[hash]; \
-			if(unlikely(sh->name[0] == 0)) \
-				memcpy(sh->name, ac, len); \
-			++sh->occurrences; \
-		}
-		elif8
-#undef X
-
-#define X(n) \
-		if(unlikely(word[n] == ':')) \
-			colon = word + n;
-		elif8
-#undef X
-
-		++contents;
-	}
-
-	/* print results by iterating `shells` and skipping entries with no occurrences */
-	for(int i = 0; i < 256; ++i)
-	{
-		const struct shell *sh = shells + i;
-
-		if(unlikely(sh->occurrences > 0))
-		{
-			char buf[128];
-			char *p = buf;
-
-			for(const char *c = sh->name; *c; ++c)
-				*p++ = *c;
-
-			p[+0] = ' ';
-			p[+1] = ':';
-			p[+2] = ' ';
-			p += 3;
-
-			/* OPTIMISATION: custom itoa? */
-			p += sprintf(p, "%d", sh->occurrences);
-
-			*p++ = '\n';
-			write(STDOUT_FILENO, buf, p - buf);
-		}
-	}
-
-	/* clean up (seems to be faster than letting the OS do it lol) */
-	munmap(contents, fs);
-	close(fd);
+  free(heap);
+  fclose(fp);
 }
-
