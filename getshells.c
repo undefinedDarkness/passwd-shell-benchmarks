@@ -34,7 +34,7 @@ int main() {
 	const char* const colon = memrchr(buffer, ':', lineSize-6) + 1;			// TODO: Replace memrchr with precalculated positions once I figure out the math
     const size_t length = buffer + lineSize - colon - 1;
 	// new id generater by @crumbtoo 
-	const size_t id = (buffer[lineSize - 4] ^ length + buffer[lineSize - 5]) % 50; // hash(colon);
+	const size_t id = (buffer[lineSize - 4] ^ length + buffer[lineSize - 5]) & 0x3f; // hash(colon);
     buf[id].count++;
     if (0 == *buf[id].name) {
       memcpy(buf[id].name, colon, length);
