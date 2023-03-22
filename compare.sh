@@ -1,11 +1,13 @@
-#!/bin/bash
+#!/bin/sh
 
+if ! [ "$SHELL" = "bash" ]; then
 # Check for standalone time
-#TIME="$(which time 2>/dev/null)"
-#if [ -z "$TIME" ]; then
-#	echo "Failed to find standalone time executable"
-#	exit
-#fi
+TIME="$(which time 2>/dev/null)"
+if [ -z "$TIME" ]; then
+	echo "Failed to find standalone time executable"
+	exit
+fi
+fi
 
 # Check for C Compiler
 if [ -n "${CC}" ]; then
